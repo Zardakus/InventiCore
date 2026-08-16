@@ -17,7 +17,6 @@ public record CreateProductCommand : IRequest<ProductDto>
     public decimal CostPrice { get; init; }
     public decimal SellingPrice { get; init; }
     public int MinimumStock { get; init; }
-    public Guid TenantId { get; init; }
 }
 
 // ── Validator ────────────────────────────────────────────────
@@ -41,9 +40,6 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 
         RuleFor(x => x.MinimumStock)
             .GreaterThanOrEqualTo(0).WithMessage("Estoque mínimo não pode ser negativo.");
-
-        RuleFor(x => x.TenantId)
-            .NotEmpty().WithMessage("TenantId é obrigatório.");
     }
 }
 
@@ -51,17 +47,22 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ProductDto>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly InventiCore.Application.Common.Interfaces.ICurrentUserService _currentUserService;
 
-    public CreateProductCommandHandler(IUnitOfWork unitOfWork)
+    public CreateProductCommandHandler(IUnitOfWork unitOfWork, InventiCore.Application.Common.Interfaces.ICurrentUserService currentUserService)
     {
         _unitOfWork = unitOfWork;
+        _currentUserService = currentUserService;
     }
 
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
+        var tenantId = _currentUserService.TenantId 
+            ?? throw new UnauthorizedAccessException("Tenant não identificado no token.");
+
         // Regra de negócio: SKU deve ser único por Tenant
         var existingProduct = await _unitOfWork.Products
-            .GetBySkuAsync(request.Sku, request.TenantId, cancellationToken);
+            .GetBySkuAsync(request.Sku, tenantId, cancellationToken);
 
         if (existingProduct is not null)
             throw new InvalidOperationException($"Já existe um produto com o SKU '{request.Sku}' para este Tenant.");
@@ -76,7 +77,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             CostPrice = request.CostPrice,
             SellingPrice = request.SellingPrice,
             MinimumStock = request.MinimumStock,
-            TenantId = request.TenantId,
+            TenantId = tenantId,
             IsActive = true
         };
 

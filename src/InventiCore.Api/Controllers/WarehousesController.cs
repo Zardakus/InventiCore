@@ -5,10 +5,12 @@ using InventiCore.Application.Features.Warehouses.Commands.UpdateWarehouse;
 using InventiCore.Application.Features.Warehouses.Queries.GetWarehouseById;
 using InventiCore.Application.Features.Warehouses.Queries.GetWarehousesByTenant;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventiCore.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class WarehousesController : ControllerBase

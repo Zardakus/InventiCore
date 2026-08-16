@@ -7,8 +7,11 @@ using InventiCore.Application.Features.Products.Queries.GetProductById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace InventiCore.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
@@ -21,13 +24,13 @@ public class ProductsController : ControllerBase
     }
 
     /// <summary>
-    /// Retorna todos os produtos de um Tenant específico.
+    /// Retorna todos os produtos do Tenant logado (lido via JWT).
     /// </summary>
-    [HttpGet("tenant/{tenantId:guid}")]
+    [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<ProductDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAllProductsQuery(tenantId), cancellationToken);
+        var result = await _mediator.Send(new GetAllProductsQuery(), cancellationToken);
         return Ok(result);
     }
 

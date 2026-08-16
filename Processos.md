@@ -21,6 +21,16 @@
 
 ## Checklist de Implementação
 
+### Phase 3: Integração e Segurança
+- [x] RabbitMQ publisher (`IMessagePublisher`).
+- [x] Background Worker (`StockLowDiscordAlertWorker`).
+- [x] Autenticação JWT (`AddJwtBearer`).
+- [x] `ICurrentUserService` extraindo `TenantId`.
+- [x] Refatoração de Handlers (Segurança e Isolamento).
+
+### Phase 4: CI/CD e Deployment (Próximo)
+- [ ] Workflow de CI/CD (GitHub Actions).
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

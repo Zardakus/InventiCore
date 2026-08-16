@@ -3,10 +3,12 @@ using InventiCore.Application.Features.Stock.Commands.AddStock;
 using InventiCore.Application.Features.Stock.Commands.RemoveStock;
 using InventiCore.Application.Features.Stock.Commands.TransferStock;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InventiCore.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class StockController : ControllerBase

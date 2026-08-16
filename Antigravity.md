@@ -96,8 +96,15 @@ Domain não referencia nenhum outro projeto.
 - A infraestrutura publica eventos no `RabbitMQ` configurado em `Topic Exchange` (`inventicore.events`).
 - Workers (`BackgroundService`) consomem filas para fluxos assíncronos, como disparar Webhooks do Discord (`StockLowDiscordAlertWorker`).
 
+### 6. Segurança e Isolamento (JWT)
+- Autenticação configurada via `JwtBearer`.
+- Isolamento Multi-tenant enforcing: O `TenantId` é lido do token (via `ICurrentUserService`) em vez do request body, garantindo que usuários nunca transacionem dados de Tenants que não lhes pertencem.
+
 ## Roadmap & Checklists
 1. **[x] Passo 1:** Estabelecer a Memória da IA.
+2. **[x] Passo 2:** CRUDs Iniciais (Tenants, Warehouses, Products).
+3. **[x] Passo 3:** Movimentação e Alertas RabbitMQ.
+4. **[x] Passo 4:** Segurança e Isolamento JWT.
 
 ---
 
