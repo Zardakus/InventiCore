@@ -17,6 +17,9 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Register Background Worker
+builder.Services.AddHostedService<InventiCore.Api.Workers.StockLowDiscordAlertWorker>();
+
 // ── Controllers ──────────────────────────────────────────
 builder.Services.AddControllers();
 

@@ -91,6 +91,14 @@ Domain não referencia nenhum outro projeto.
 6. **Todo dado pertence a um Tenant**: queries devem sempre filtrar por `TenantId` para garantir isolamento.
 7. **CreatedAt/UpdatedAt são gerenciados automaticamente**: via override de `SaveChangesAsync` no DbContext. Nunca setar manualmente.
 
+### 5. Eventos e Mensageria (RabbitMQ)
+- Acoplamento frouxo utilizando Eventos de Domínio (`InventiCore.Application.Common.Events`).
+- A infraestrutura publica eventos no `RabbitMQ` configurado em `Topic Exchange` (`inventicore.events`).
+- Workers (`BackgroundService`) consomem filas para fluxos assíncronos, como disparar Webhooks do Discord (`StockLowDiscordAlertWorker`).
+
+## Roadmap & Checklists
+1. **[x] Passo 1:** Estabelecer a Memória da IA.
+
 ---
 
 ## 4. Convenções de Código
