@@ -100,11 +100,16 @@ Domain não referencia nenhum outro projeto.
 - Autenticação configurada via `JwtBearer`.
 - Isolamento Multi-tenant enforcing: O `TenantId` é lido do token (via `ICurrentUserService`) em vez do request body, garantindo que usuários nunca transacionem dados de Tenants que não lhes pertencem.
 
+### 7. CI/CD e Integração Contínua
+- Pipeline de integração contínua implementado no GitHub Actions (`.github/workflows/main.yml`).
+- A cada *push* ou *pull request* na `main`, o código sofre *restore*, *build* em modo `Release` e *test*. Isso garante a integridade estrutural da master branch e evita que quebras sejam integradas silenciosamente.
+
 ## Roadmap & Checklists
 1. **[x] Passo 1:** Estabelecer a Memória da IA.
 2. **[x] Passo 2:** CRUDs Iniciais (Tenants, Warehouses, Products).
 3. **[x] Passo 3:** Movimentação e Alertas RabbitMQ.
 4. **[x] Passo 4:** Segurança e Isolamento JWT.
+5. **[x] Passo 5:** CI/CD e Integração com Repositório Remoto.
 
 ---
 
