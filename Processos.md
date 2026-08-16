@@ -40,6 +40,7 @@
 - [x] Criar servidor MCP nativo `InventiCore.Mcp`.
 - [x] Expor `analyze_low_stock` via STDIO.
 - [x] Expor `execute_stock_transfer` nativamente, validando Tenant Security Context via args.
+- [x] Validar integração do MCP no Host (resolvido STDOUT corruption).
 
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
