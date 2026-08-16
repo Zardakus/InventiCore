@@ -28,4 +28,5 @@ public interface IStockItemRepository : IRepository<StockItem>
 public interface IStockMovementRepository : IRepository<StockMovement>
 {
     Task<IEnumerable<StockMovement>> GetByStockItemAsync(Guid stockItemId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<StockMovement>> GetMovementsByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }

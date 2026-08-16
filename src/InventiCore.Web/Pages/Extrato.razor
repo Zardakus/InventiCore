@@ -1,0 +1,69 @@
+@page "/extrato"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+
+<PageTitle>Extrato de Movimentações</PageTitle>
+
+<h2>Extrato de Movimentações</h2>
+
+@if (movements == null)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenDataGrid Data="@movements" TItem="StockMovementHistoryDto" AllowPaging="true" PageSize="15" AllowSorting="true">
+        <Columns>
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="CreatedAt" Title="Data" FormatString="{0:dd/MM/yyyy HH:mm}" />
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="MovementType" Title="Tipo">
+                <Template Context="mov">
+                    @if (mov.MovementType == "Entry" || mov.MovementType == "Entrada" || mov.MovementType == "Add")
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Entrada" />
+                    }
+                    else if (mov.MovementType == "Exit" || mov.MovementType == "Saída" || mov.MovementType == "Remove")
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Saída" />
+                    }
+                    else
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Transferência" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="ProductName" Title="Produto" />
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="Quantity" Title="Qtd" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="WarehouseName" Title="Depósito" />
+            <RadzenDataGridColumn TItem="StockMovementHistoryDto" Property="Reason" Title="Motivo" />
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    private List<StockMovementHistoryDto>? movements;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            movements = await Http.GetFromJsonAsync<List<StockMovementHistoryDto>>("api/stock/movements");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar extrato: {ex.Message}");
+        }
+    }
+
+    public class StockMovementHistoryDto
+    {
+        public DateTime CreatedAt { get; set; }
+        public string MovementType { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string WarehouseName { get; set; } = string.Empty;
+        public string? Reason { get; set; }
+        public string? SourceWarehouseName { get; set; }
+        public string? DestinationWarehouseName { get; set; }
+    }
+}

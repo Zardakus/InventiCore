@@ -51,4 +51,12 @@ public class StockController : ControllerBase
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }
+
+    [HttpGet("movements")]
+    [ProducesResponseType(typeof(IEnumerable<StockMovementHistoryDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMovements(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new InventiCore.Application.Features.Stock.Queries.GetStockMovements.GetStockMovementsQuery(), cancellationToken);
+        return Ok(result);
+    }
 }
