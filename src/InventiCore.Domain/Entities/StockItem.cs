@@ -21,4 +21,17 @@ public class StockItem : BaseEntity
     public Product Product { get; set; } = null!;
     public Warehouse Warehouse { get; set; } = null!;
     public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
+
+    public void AddQuantity(int amount)
+    {
+        if (amount <= 0) throw new ArgumentException("A quantidade a ser adicionada deve ser maior que zero.", nameof(amount));
+        Quantity += amount;
+    }
+
+    public void RemoveQuantity(int amount)
+    {
+        if (amount <= 0) throw new ArgumentException("A quantidade a ser removida deve ser maior que zero.", nameof(amount));
+        if (Quantity < amount) throw new InventiCore.Domain.Exceptions.InsufficientStockException(Product?.Name ?? "Desconhecido", amount, Quantity);
+        Quantity -= amount;
+    }
 }

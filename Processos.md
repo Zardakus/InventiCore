@@ -59,6 +59,12 @@
 - [x] **Feature (Extrato)**: Nova funcionalidade de "Histórico de Movimentações", expondo *StockMovements* de forma cronológica via CQRS e renderizando em *RadzenDataGrid* com Badges visuais (Entrada/Saída/Transferência).
 - [x] **Self-Healing**: Identificação de gargalos de build por bloqueio de arquivo no pipeline (Stop-Process forçado via PID) resolvendo a falha MSB3026.
 
+### Phase 9: Qualidade e Cobertura de Testes
+- [x] Criação do projeto `InventiCore.UnitTests` (xUnit).
+- [x] Configuração das ferramentas de qualidade: `Moq` e `FluentAssertions`.
+- [x] Testes de Domínio: Adição de métodos de regra de negócio (`AddQuantity`, `RemoveQuantity`) na entidade `StockItem` e validação com `InsufficientStockException`.
+- [x] Testes de Aplicação: Cobertura do Handler `TransferStockCommandHandler` validando fluxos de sucesso e isolamento de Tenants.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

@@ -74,8 +74,8 @@ public class TransferStockCommandHandler : IRequestHandler<TransferStockCommand,
         }
 
         // Realiza a transferência
-        sourceStock.Quantity -= request.Quantity;
-        destStock.Quantity += request.Quantity;
+        sourceStock.RemoveQuantity(request.Quantity);
+        destStock.AddQuantity(request.Quantity);
 
         _unitOfWork.StockItems.Update(sourceStock);
         _unitOfWork.StockItems.Update(destStock);

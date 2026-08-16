@@ -53,7 +53,7 @@ public class RemoveStockCommandHandler : IRequestHandler<RemoveStockCommand, Sto
         }
 
         // Transação: Reduz quantidade e grava o log
-        stockItem.Quantity -= request.Quantity;
+        stockItem.RemoveQuantity(request.Quantity);
         _unitOfWork.StockItems.Update(stockItem);
 
         var movement = new StockMovement
