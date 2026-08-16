@@ -6,6 +6,7 @@ namespace InventiCore.Domain.Interfaces;
 /// </summary>
 public interface IUnitOfWork : IDisposable
 {
+    ITenantRepository Tenants { get; }
     IProductRepository Products { get; }
     IWarehouseRepository Warehouses { get; }
     IStockItemRepository StockItems { get; }

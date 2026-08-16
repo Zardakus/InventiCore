@@ -2,6 +2,11 @@ using InventiCore.Domain.Entities;
 
 namespace InventiCore.Domain.Interfaces;
 
+public interface ITenantRepository : IRepository<Tenant>
+{
+    Task<Tenant?> GetByDocumentAsync(string document, CancellationToken cancellationToken = default);
+}
+
 public interface IProductRepository : IRepository<Product>
 {
     Task<Product?> GetBySkuAsync(string sku, Guid tenantId, CancellationToken cancellationToken = default);

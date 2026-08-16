@@ -19,6 +19,7 @@ public static class DependencyInjection
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         // ── Repositories ─────────────────────────────────────────
+        services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IWarehouseRepository, WarehouseRepository>();
         services.AddScoped<IStockItemRepository, StockItemRepository>();

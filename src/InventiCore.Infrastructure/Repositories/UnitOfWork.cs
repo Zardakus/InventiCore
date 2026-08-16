@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly InventiCoreDbContext _context;
 
+    private ITenantRepository? _tenants;
     private IProductRepository? _products;
     private IWarehouseRepository? _warehouses;
     private IStockItemRepository? _stockItems;
@@ -22,6 +23,9 @@ public class UnitOfWork : IUnitOfWork
     }
 
     // Lazy initialization — repositórios são criados sob demanda
+    public ITenantRepository Tenants =>
+        _tenants ??= new TenantRepository(_context);
+
     public IProductRepository Products =>
         _products ??= new ProductRepository(_context);
 
