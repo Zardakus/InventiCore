@@ -32,6 +32,12 @@ var configuration = new ConfigurationBuilder()
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
+        services.AddLogging(logging => 
+        {
+            logging.ClearProviders();
+            logging.AddDebug();
+        });
+
         services.AddApplication();
         services.AddInfrastructure(configuration);
 
