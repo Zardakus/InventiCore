@@ -31,10 +31,15 @@
 ### Phase 4: CI/CD e Deployment
 - [x] Workflow de CI/CD (GitHub Actions).
 
-### Phase 5: Frontend e Consumo (Próximo)
+### Phase 5: Frontend e Consumo
 - [x] Scaffold projeto Blazor WebAssembly (`InventiCore.Web`).
 - [x] Injeção de `HttpClient` e Autenticação JWT (`CustomAuthStateProvider`).
 - [x] Tela de Login e consumo de endpoint de produtos restritos via API (`[Authorize]`).
+
+### Phase 6: Inteligência Artificial (MCP)
+- [x] Criar servidor MCP nativo `InventiCore.Mcp`.
+- [x] Expor `analyze_low_stock` via STDIO.
+- [x] Expor `execute_stock_transfer` nativamente, validando Tenant Security Context via args.
 
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.

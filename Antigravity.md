@@ -109,6 +109,13 @@ Domain não referencia nenhum outro projeto.
 - **Integração:** `HttpClient` configurado com injeção de token `Bearer`.
 - **Autenticação:** `CustomAuthStateProvider` decodifica JWT extraído do `ILocalStorageService` persistindo o login localmente e protegendo o roteamento com `<AuthorizeRouteView>`.
 
+### 9. Agentes IA e Automação (MCP)
+- **Servidor MCP:** Um projeto dedicado em Console `InventiCore.Mcp` foi criado para prover a integração Model Context Protocol nativa via STDIO.
+- **Isolamento via Params:** O servidor MCP só inicia fornecendo o `--tenant-id`. Ele injeta isso num *mock* de `ICurrentUserService`, forçando a arquitetura MediatR a limitar 100% o acesso da IA aos dados daquele Tenant específico.
+- **Ferramentas Expostas:**
+  - `analyze_low_stock`: Utiliza o `AnalyzeLowStockQuery` para avaliar falta de estoque e sugerir *Warehouses* de transferência.
+  - `execute_stock_transfer`: Reaproveita o `TransferStockCommand` para automatizar o balanceamento em tempo real.
+
 ## Roadmap & Checklists
 1. **[x] Passo 1:** Estabelecer a Memória da IA.
 2. **[x] Passo 2:** CRUDs Iniciais (Tenants, Warehouses, Products).
@@ -116,6 +123,7 @@ Domain não referencia nenhum outro projeto.
 4. **[x] Passo 4:** Segurança e Isolamento JWT.
 5. **[x] Passo 5:** CI/CD e Integração com Repositório Remoto.
 6. **[x] Passo 6:** Fundação do Frontend em Blazor WASM.
+7. **[x] Passo 7:** Arquitetura de Agentes (Model Context Protocol).
 
 ---
 

@@ -1,0 +1,45 @@
+using InventiCore.Application;
+using InventiCore.Application.Common.Interfaces;
+using InventiCore.Infrastructure;
+using InventiCore.Mcp;
+using InventiCore.Mcp.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+// Recupera o TenantId obrigatório
+var tenantArgIndex = Array.IndexOf(args, "--tenant-id");
+if (tenantArgIndex == -1 || tenantArgIndex + 1 >= args.Length)
+{
+    Console.Error.WriteLine("ERRO: Argumento --tenant-id é obrigatório para garantir isolamento de contexto.");
+    Environment.Exit(1);
+}
+
+if (!Guid.TryParse(args[tenantArgIndex + 1], out var tenantId))
+{
+    Console.Error.WriteLine("ERRO: --tenant-id inválido.");
+    Environment.Exit(1);
+}
+
+// Configura o banco de dados (reaproveita appsettings do Api se quiser, ou sobrescreve local)
+// Vamos adicionar as configurações do appsettings.json da API para facilitar o dev local
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("../InventiCore.Api/appsettings.json", optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        services.AddApplication();
+        services.AddInfrastructure(configuration);
+
+        // Injetar o contexto seguro MCP com o TenantId
+        services.AddSingleton<ICurrentUserService>(new McpCurrentUserService { TenantId = tenantId });
+
+        services.AddHostedService<McpStdioServer>();
+    });
+
+var host = builder.Build();
+await host.RunAsync();
