@@ -104,12 +104,18 @@ Domain não referencia nenhum outro projeto.
 - Pipeline de integração contínua implementado no GitHub Actions (`.github/workflows/main.yml`).
 - A cada *push* ou *pull request* na `main`, o código sofre *restore*, *build* em modo `Release` e *test*. Isso garante a integridade estrutural da master branch e evita que quebras sejam integradas silenciosamente.
 
+### 8. Frontend (Blazor WebAssembly)
+- **Framework:** Blazor WebAssembly (.NET 8).
+- **Integração:** `HttpClient` configurado com injeção de token `Bearer`.
+- **Autenticação:** `CustomAuthStateProvider` decodifica JWT extraído do `ILocalStorageService` persistindo o login localmente e protegendo o roteamento com `<AuthorizeRouteView>`.
+
 ## Roadmap & Checklists
 1. **[x] Passo 1:** Estabelecer a Memória da IA.
 2. **[x] Passo 2:** CRUDs Iniciais (Tenants, Warehouses, Products).
 3. **[x] Passo 3:** Movimentação e Alertas RabbitMQ.
 4. **[x] Passo 4:** Segurança e Isolamento JWT.
 5. **[x] Passo 5:** CI/CD e Integração com Repositório Remoto.
+6. **[x] Passo 6:** Fundação do Frontend em Blazor WASM.
 
 ---
 

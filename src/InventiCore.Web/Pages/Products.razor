@@ -1,0 +1,72 @@
+@page "/produtos"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+
+<PageTitle>Produtos</PageTitle>
+
+<h1>Inventário do Tenant Logado</h1>
+
+<p>Abaixo estão listados todos os produtos pertencentes de forma isolada ao Tenant atual.</p>
+
+@if (products == null)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (!products.Any())
+{
+    <p>Nenhum produto encontrado neste Tenant.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>SKU</th>
+                <th>Preço Venda</th>
+                <th>Estoque Mínimo</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in products)
+            {
+                <tr>
+                    <td>@p.Name</td>
+                    <td>@p.Sku</td>
+                    <td>@p.SellingPrice.ToString("C")</td>
+                    <td>@p.MinimumStock</td>
+                    <td>@(p.IsActive ? "Ativo" : "Inativo")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<ProductDto>? products;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao buscar produtos: {ex.Message}");
+            products = new List<ProductDto>();
+        }
+    }
+
+    public class ProductDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Sku { get; set; } = string.Empty;
+        public decimal SellingPrice { get; set; }
+        public int MinimumStock { get; set; }
+        public bool IsActive { get; set; }
+    }
+}

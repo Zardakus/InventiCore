@@ -31,6 +31,11 @@
 ### Phase 4: CI/CD e Deployment
 - [x] Workflow de CI/CD (GitHub Actions).
 
+### Phase 5: Frontend e Consumo (Próximo)
+- [x] Scaffold projeto Blazor WebAssembly (`InventiCore.Web`).
+- [x] Injeção de `HttpClient` e Autenticação JWT (`CustomAuthStateProvider`).
+- [x] Tela de Login e consumo de endpoint de produtos restritos via API (`[Authorize]`).
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

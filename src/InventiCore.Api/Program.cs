@@ -58,6 +58,9 @@ builder.Services.AddHostedService<InventiCore.Api.Workers.StockLowDiscordAlertWo
 // ── Controllers ──────────────────────────────────────────
 builder.Services.AddControllers();
 
+// ── CORS ─────────────────────────────────────────────────
+builder.Services.AddCors();
+
 // ── Swagger ──────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -111,6 +114,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+
+// Use CORS before Auth
+app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

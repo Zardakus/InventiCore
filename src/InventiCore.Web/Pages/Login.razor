@@ -1,0 +1,81 @@
+@page "/login"
+@using Blazored.LocalStorage
+@using InventiCore.Web.Auth
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<h3>Acesso ao SaaS</h3>
+
+<div class="card p-4" style="max-width: 400px; margin: auto;">
+    <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+        <div class="mb-3">
+            <label>Usuário</label>
+            <InputText @bind-Value="loginModel.Username" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label>Senha</label>
+            <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label>Tenant ID (Simulação)</label>
+            <InputText @bind-Value="loginModel.TenantId" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Entrar</button>
+        
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">@errorMessage</div>
+        }
+    </EditForm>
+</div>
+
+@code {
+    private LoginRequest loginModel = new LoginRequest 
+    { 
+        Username = "admin", 
+        Password = "admin", 
+        TenantId = "7eca4967-f455-464c-bb32-925522806364" 
+    };
+    
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        var response = await Http.PostAsJsonAsync("api/auth/login", new
+        {
+            Username = loginModel.Username,
+            Password = loginModel.Password,
+            TenantId = Guid.Parse(loginModel.TenantId)
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            if (result?.Token != null)
+            {
+                await LocalStorage.SetItemAsync("authToken", result.Token);
+                ((CustomAuthStateProvider)AuthStateProvider).NotifyUserAuthentication(result.Token);
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        else
+        {
+            errorMessage = "Erro ao fazer login. Verifique as credenciais.";
+        }
+    }
+
+    public class LoginRequest
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+        public string TenantId { get; set; } = "";
+    }
+
+    public class LoginResponse
+    {
+        public string Token { get; set; } = "";
+    }
+}
