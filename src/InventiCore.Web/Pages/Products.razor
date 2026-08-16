@@ -3,12 +3,13 @@
 @attribute [Authorize]
 @inject HttpClient Http
 @inject NotificationService NotificationService
+@inject DialogService DialogService
 
 <PageTitle>Produtos</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Gestão de Produtos</h2>
-    <RadzenButton Icon="add" Text="Novo Produto" Click="@InsertRow" ButtonStyle="ButtonStyle.Primary" />
+    <RadzenButton Icon="add" Text="Novo Produto" Click="@OpenCreateDialog" ButtonStyle="ButtonStyle.Primary" />
 </div>
 
 @if (products == null)
@@ -17,54 +18,30 @@
 }
 else
 {
-    <RadzenDataGrid @ref="grid" Data="@products" TItem="ProductDto" AllowPaging="true" PageSize="10" AllowSorting="true" EditMode="DataGridEditMode.Single" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <RadzenDataGrid @ref="grid" Data="@products" TItem="ProductFormDialog.ProductDto" AllowPaging="true" PageSize="10" AllowSorting="true">
         <Columns>
-            <RadzenDataGridColumn TItem="ProductDto" Property="Name" Title="Nome">
-                <EditTemplate Context="product">
-                    <RadzenTextBox @bind-Value="product.Name" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ProductDto" Property="Sku" Title="SKU">
-                <EditTemplate Context="product">
-                    <RadzenTextBox @bind-Value="product.Sku" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ProductDto" Property="SellingPrice" Title="Preço" FormatString="{0:C}">
-                <EditTemplate Context="product">
-                    <RadzenNumeric @bind-Value="product.SellingPrice" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ProductDto" Property="MinimumStock" Title="Estoque Mínimo">
-                <EditTemplate Context="product">
-                    <RadzenNumeric @bind-Value="product.MinimumStock" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ProductDto" Property="IsActive" Title="Status">
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="Name" Title="Nome" />
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="Sku" Title="SKU" />
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="SellingPrice" Title="Preço" FormatString="{0:C}" />
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="MinimumStock" Title="Estoque Mínimo" />
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="IsActive" Title="Status">
                 <Template Context="product">
                     @(product.IsActive ? "Ativo" : "Inativo")
                 </Template>
-                <EditTemplate Context="product">
-                    <RadzenSwitch @bind-Value="product.IsActive" />
-                </EditTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="ProductDto" Context="product" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
                 <Template Context="product">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(product))" @onclick:stopPropagation="true" />
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => OpenEditDialog(product))" @onclick:stopPropagation="true" />
                     <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(product))" @onclick:stopPropagation="true" />
                 </Template>
-                <EditTemplate Context="product">
-                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(product))" />
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(product))" />
-                </EditTemplate>
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 }
 
 @code {
-    private RadzenDataGrid<ProductDto> grid = null!;
-    private List<ProductDto>? products;
-    private ProductDto? productToInsert;
+    private RadzenDataGrid<ProductFormDialog.ProductDto> grid = null!;
+    private List<ProductFormDialog.ProductDto>? products;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,7 +52,7 @@ else
     {
         try
         {
-            products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
+            products = await Http.GetFromJsonAsync<List<ProductFormDialog.ProductDto>>("api/products");
         }
         catch
         {
@@ -83,32 +60,79 @@ else
         }
     }
 
-    async Task EditRow(ProductDto product) => await grid.EditRow(product);
-
-    async Task SaveRow(ProductDto product) => await grid.UpdateRow(product);
-
-    void CancelEdit(ProductDto product)
+    async Task OpenCreateDialog()
     {
-        grid.CancelEditRow(product);
-        if (product == productToInsert) productToInsert = null;
+        var result = await DialogService.OpenAsync<ProductFormDialog>("Novo Produto",
+            new Dictionary<string, object?>() { { "Product", new ProductFormDialog.ProductDto { Id = Guid.NewGuid(), IsActive = true } } },
+            new DialogOptions() { Width = "500px", Resizable = true, Draggable = true });
+
+        if (result != null)
+        {
+            var dto = result as ProductFormDialog.ProductDto;
+            if (dto == null) return;
+            try
+            {
+                var response = await Http.PostAsJsonAsync("api/products", new 
+                { 
+                    Name = dto.Name, 
+                    Sku = dto.Sku, 
+                    SellingPrice = dto.SellingPrice, 
+                    MinimumStock = dto.MinimumStock,
+                    IsActive = dto.IsActive 
+                });
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto criado!" });
+                    await LoadData();
+                }
+                else throw new Exception();
+            }
+            catch
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar produto." });
+            }
+        }
     }
 
-    async Task OnUpdateRow(ProductDto product)
+    async Task OpenEditDialog(ProductFormDialog.ProductDto product)
     {
-        try
+        var clone = new ProductFormDialog.ProductDto 
+        { 
+            Id = product.Id, 
+            Name = product.Name, 
+            Sku = product.Sku, 
+            SellingPrice = product.SellingPrice,
+            MinimumStock = product.MinimumStock,
+            IsActive = product.IsActive
+        };
+
+        var result = await DialogService.OpenAsync<ProductFormDialog>("Editar Produto",
+            new Dictionary<string, object?>() { { "Product", clone } },
+            new DialogOptions() { Width = "500px", Resizable = true, Draggable = true });
+
+        if (result != null)
         {
-            var response = await Http.PutAsJsonAsync($"api/products/{product.Id}", product);
-            if (!response.IsSuccessStatusCode) throw new Exception();
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto atualizado!" });
-        }
-        catch
-        {
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar." });
-            await LoadData();
+            var dto = result as ProductFormDialog.ProductDto;
+            if (dto == null) return;
+            try
+            {
+                var response = await Http.PutAsJsonAsync($"api/products/{dto.Id}", dto);
+                if (response.IsSuccessStatusCode)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto atualizado!" });
+                    await LoadData();
+                }
+                else throw new Exception();
+            }
+            catch
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar." });
+            }
         }
     }
 
-    async Task DeleteRow(ProductDto product)
+    async Task DeleteRow(ProductFormDialog.ProductDto product)
     {
         try
         {
@@ -125,53 +149,5 @@ else
         {
             NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao excluir." });
         }
-    }
-
-    async Task InsertRow()
-    {
-        productToInsert = new ProductDto { Id = Guid.NewGuid(), Name = "", Sku = "", IsActive = true };
-        await grid.InsertRow(productToInsert);
-    }
-
-    async Task OnCreateRow(ProductDto product)
-    {
-        try
-        {
-            var response = await Http.PostAsJsonAsync("api/products", new 
-            { 
-                Name = product.Name, 
-                Sku = product.Sku, 
-                SellingPrice = product.SellingPrice, 
-                MinimumStock = product.MinimumStock,
-                IsActive = product.IsActive 
-            });
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var created = await response.Content.ReadFromJsonAsync<ProductDto>();
-                if (created != null)
-                {
-                    product.Id = created.Id;
-                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto criado!" });
-                }
-            }
-            else throw new Exception();
-        }
-        catch
-        {
-            products!.Remove(product);
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar produto." });
-        }
-        productToInsert = null;
-    }
-
-    public class ProductDto
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Sku { get; set; } = string.Empty;
-        public decimal SellingPrice { get; set; }
-        public int MinimumStock { get; set; }
-        public bool IsActive { get; set; }
     }
 }

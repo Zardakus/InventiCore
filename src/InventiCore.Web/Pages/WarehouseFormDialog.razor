@@ -1,0 +1,52 @@
+@using Microsoft.AspNetCore.Components
+@using Radzen
+@using Radzen.Blazor
+@inject DialogService DialogService
+
+<RadzenTemplateForm Data="@Warehouse" Submit="@((WarehouseDto args) => Submit(args))">
+    <div class="row mb-3">
+        <div class="col-md-4 align-items-center d-flex">
+            <RadzenLabel Text="Nome" />
+        </div>
+        <div class="col-md-8">
+            <RadzenTextBox @bind-Value="Warehouse.Name" style="width: 100%;" Name="Name" />
+            <RadzenRequiredValidator Component="Name" Text="Nome é obrigatório" />
+        </div>
+    </div>
+    <div class="row mb-3">
+        <div class="col-md-4 align-items-center d-flex">
+            <RadzenLabel Text="Localização" />
+        </div>
+        <div class="col-md-8">
+            <RadzenTextBox @bind-Value="Warehouse.Location" style="width: 100%;" Name="Location" />
+            <RadzenRequiredValidator Component="Location" Text="Localização é obrigatória" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 text-right">
+            <RadzenButton ButtonType="ButtonType.Button" Icon="close" Text="Cancelar" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+            <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Salvar" ButtonStyle="ButtonStyle.Primary" class="ms-2" />
+        </div>
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public WarehouseDto Warehouse { get; set; } = new WarehouseDto();
+
+    void Submit(WarehouseDto arg)
+    {
+        DialogService.Close(arg);
+    }
+
+    void Cancel()
+    {
+        DialogService.Close(null);
+    }
+
+    public class WarehouseDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+    }
+}

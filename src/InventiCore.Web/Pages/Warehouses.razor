@@ -3,12 +3,13 @@
 @attribute [Authorize]
 @inject HttpClient Http
 @inject NotificationService NotificationService
+@inject DialogService DialogService
 
 <PageTitle>Depósitos</PageTitle>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Gestão de Depósitos</h2>
-    <RadzenButton Icon="add" Text="Novo Depósito" Click="@InsertRow" ButtonStyle="ButtonStyle.Primary" />
+    <RadzenButton Icon="add" Text="Novo Depósito" Click="@OpenCreateDialog" ButtonStyle="ButtonStyle.Primary" />
 </div>
 
 @if (warehouses == null)
@@ -17,40 +18,23 @@
 }
 else
 {
-    <RadzenDataGrid @ref="grid" Data="@warehouses" TItem="WarehouseDto" EditMode="DataGridEditMode.Single" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+    <RadzenDataGrid @ref="grid" Data="@warehouses" TItem="WarehouseFormDialog.WarehouseDto" AllowPaging="true" PageSize="10">
         <Columns>
-            <RadzenDataGridColumn TItem="WarehouseDto" Property="Name" Title="Nome">
-                <EditTemplate Context="warehouse">
-                    <RadzenTextBox @bind-Value="warehouse.Name" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="WarehouseDto" Property="Location" Title="Localização">
-                <EditTemplate Context="warehouse">
-                    <RadzenTextBox @bind-Value="warehouse.Location" Style="width:100%" />
-                </EditTemplate>
-            </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="WarehouseDto" Context="warehouse" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+            <RadzenDataGridColumn TItem="WarehouseFormDialog.WarehouseDto" Property="Name" Title="Nome" />
+            <RadzenDataGridColumn TItem="WarehouseFormDialog.WarehouseDto" Property="Location" Title="Localização" />
+            <RadzenDataGridColumn TItem="WarehouseFormDialog.WarehouseDto" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
                 <Template Context="warehouse">
-                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(warehouse))" @onclick:stopPropagation="true">
-                    </RadzenButton>
-                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(warehouse))" @onclick:stopPropagation="true">
-                    </RadzenButton>
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => OpenEditDialog(warehouse))" @onclick:stopPropagation="true" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(warehouse))" @onclick:stopPropagation="true" />
                 </Template>
-                <EditTemplate Context="warehouse">
-                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(warehouse))">
-                    </RadzenButton>
-                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(warehouse))">
-                    </RadzenButton>
-                </EditTemplate>
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 }
 
 @code {
-    private RadzenDataGrid<WarehouseDto> grid = null!;
-    private List<WarehouseDto>? warehouses;
-    private WarehouseDto? warehouseToInsert;
+    private RadzenDataGrid<WarehouseFormDialog.WarehouseDto> grid = null!;
+    private List<WarehouseFormDialog.WarehouseDto>? warehouses;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,49 +45,72 @@ else
     {
         try
         {
-            warehouses = await Http.GetFromJsonAsync<List<WarehouseDto>>("api/warehouses");
+            warehouses = await Http.GetFromJsonAsync<List<WarehouseFormDialog.WarehouseDto>>("api/warehouses");
         }
-        catch (Exception ex)
+        catch
         {
             NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao carregar depósitos." });
         }
     }
 
-    async Task EditRow(WarehouseDto warehouse)
+    async Task OpenCreateDialog()
     {
-        await grid.EditRow(warehouse);
-    }
+        var result = await DialogService.OpenAsync<WarehouseFormDialog>("Novo Depósito",
+            new Dictionary<string, object?>() { { "Warehouse", new WarehouseFormDialog.WarehouseDto { Id = Guid.NewGuid() } } },
+            new DialogOptions() { Width = "500px", Resizable = true, Draggable = true });
 
-    async Task OnUpdateRow(WarehouseDto warehouse)
-    {
-        try
+        if (result != null)
         {
-            var response = await Http.PutAsJsonAsync($"api/warehouses/{warehouse.Id}", warehouse);
-            if (!response.IsSuccessStatusCode) throw new Exception();
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito atualizado!" });
-        }
-        catch
-        {
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar depósito." });
-            await LoadData();
-        }
-    }
-
-    async Task SaveRow(WarehouseDto warehouse)
-    {
-        await grid.UpdateRow(warehouse);
-    }
-
-    void CancelEdit(WarehouseDto warehouse)
-    {
-        grid.CancelEditRow(warehouse);
-        if (warehouse == warehouseToInsert)
-        {
-            warehouseToInsert = null;
+            var dto = result as WarehouseFormDialog.WarehouseDto;
+            if (dto == null) return;
+            try
+            {
+                var response = await Http.PostAsJsonAsync("api/warehouses", new { Name = dto.Name, Location = dto.Location });
+                if (response.IsSuccessStatusCode)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito criado!" });
+                    await LoadData();
+                }
+                else throw new Exception();
+            }
+            catch
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar depósito." });
+            }
         }
     }
 
-    async Task DeleteRow(WarehouseDto warehouse)
+    async Task OpenEditDialog(WarehouseFormDialog.WarehouseDto warehouse)
+    {
+        // Clone for editing
+        var clone = new WarehouseFormDialog.WarehouseDto { Id = warehouse.Id, Name = warehouse.Name, Location = warehouse.Location };
+        
+        var result = await DialogService.OpenAsync<WarehouseFormDialog>("Editar Depósito",
+            new Dictionary<string, object?>() { { "Warehouse", clone } },
+            new DialogOptions() { Width = "500px", Resizable = true, Draggable = true });
+
+        if (result != null)
+        {
+            var dto = result as WarehouseFormDialog.WarehouseDto;
+            if (dto == null) return;
+            try
+            {
+                var response = await Http.PutAsJsonAsync($"api/warehouses/{dto.Id}", dto);
+                if (response.IsSuccessStatusCode)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito atualizado!" });
+                    await LoadData();
+                }
+                else throw new Exception();
+            }
+            catch
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar depósito." });
+            }
+        }
+    }
+
+    async Task DeleteRow(WarehouseFormDialog.WarehouseDto warehouse)
     {
         try
         {
@@ -114,54 +121,11 @@ else
                 await grid.Reload();
                 NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito excluído." });
             }
-            else
-            {
-                throw new Exception();
-            }
+            else throw new Exception();
         }
         catch
         {
             NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao excluir." });
         }
-    }
-
-    async Task InsertRow()
-    {
-        warehouseToInsert = new WarehouseDto { Id = Guid.NewGuid(), Name = "", Location = "" };
-        await grid.InsertRow(warehouseToInsert);
-    }
-
-    async Task OnCreateRow(WarehouseDto warehouse)
-    {
-        try
-        {
-            var response = await Http.PostAsJsonAsync("api/warehouses", new { Name = warehouse.Name, Location = warehouse.Location });
-            if (response.IsSuccessStatusCode)
-            {
-                var created = await response.Content.ReadFromJsonAsync<WarehouseDto>();
-                if (created != null)
-                {
-                    warehouse.Id = created.Id;
-                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito criado!" });
-                }
-            }
-            else
-            {
-                throw new Exception();
-            }
-        }
-        catch
-        {
-            warehouses!.Remove(warehouse);
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar depósito." });
-        }
-        warehouseToInsert = null;
-    }
-
-    public class WarehouseDto
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string Location { get; set; } = string.Empty;
     }
 }
