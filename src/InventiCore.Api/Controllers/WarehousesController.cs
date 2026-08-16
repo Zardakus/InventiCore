@@ -22,11 +22,11 @@ public class WarehousesController : ControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet("tenant/{tenantId:guid}")]
+    [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<WarehouseDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetByTenant(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetWarehousesByTenantQuery(tenantId), cancellationToken);
+        var result = await _mediator.Send(new GetWarehousesByTenantQuery(), cancellationToken);
         return Ok(result);
     }
 

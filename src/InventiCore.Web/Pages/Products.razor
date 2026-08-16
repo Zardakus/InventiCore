@@ -2,62 +2,167 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @inject HttpClient Http
+@inject NotificationService NotificationService
 
 <PageTitle>Produtos</PageTitle>
 
-<h1>Inventário do Tenant Logado</h1>
-
-<p>Abaixo estão listados todos os produtos pertencentes de forma isolada ao Tenant atual.</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestão de Produtos</h2>
+    <RadzenButton Icon="add" Text="Novo Produto" Click="@InsertRow" ButtonStyle="ButtonStyle.Primary" />
+</div>
 
 @if (products == null)
 {
-    <p><em>Carregando...</em></p>
-}
-else if (!products.Any())
-{
-    <p>Nenhum produto encontrado neste Tenant.</p>
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>SKU</th>
-                <th>Preço Venda</th>
-                <th>Estoque Mínimo</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in products)
-            {
-                <tr>
-                    <td>@p.Name</td>
-                    <td>@p.Sku</td>
-                    <td>@p.SellingPrice.ToString("C")</td>
-                    <td>@p.MinimumStock</td>
-                    <td>@(p.IsActive ? "Ativo" : "Inativo")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <RadzenDataGrid @ref="grid" Data="@products" TItem="ProductDto" AllowPaging="true" PageSize="10" AllowSorting="true" EditMode="DataGridEditMode.Single" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+        <Columns>
+            <RadzenDataGridColumn TItem="ProductDto" Property="Name" Title="Nome">
+                <EditTemplate Context="product">
+                    <RadzenTextBox @bind-Value="product.Name" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductDto" Property="Sku" Title="SKU">
+                <EditTemplate Context="product">
+                    <RadzenTextBox @bind-Value="product.Sku" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductDto" Property="SellingPrice" Title="Preço" FormatString="{0:C}">
+                <EditTemplate Context="product">
+                    <RadzenNumeric @bind-Value="product.SellingPrice" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductDto" Property="MinimumStock" Title="Estoque Mínimo">
+                <EditTemplate Context="product">
+                    <RadzenNumeric @bind-Value="product.MinimumStock" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductDto" Property="IsActive" Title="Status">
+                <Template Context="product">
+                    @(product.IsActive ? "Ativo" : "Inativo")
+                </Template>
+                <EditTemplate Context="product">
+                    <RadzenSwitch @bind-Value="product.IsActive" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ProductDto" Context="product" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+                <Template Context="product">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(product))" @onclick:stopPropagation="true" />
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(product))" @onclick:stopPropagation="true" />
+                </Template>
+                <EditTemplate Context="product">
+                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(product))" />
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(product))" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
 }
 
 @code {
+    private RadzenDataGrid<ProductDto> grid = null!;
     private List<ProductDto>? products;
+    private ProductDto? productToInsert;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
     {
         try
         {
             products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Erro ao buscar produtos: {ex.Message}");
-            products = new List<ProductDto>();
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao carregar produtos." });
         }
+    }
+
+    async Task EditRow(ProductDto product) => await grid.EditRow(product);
+
+    async Task SaveRow(ProductDto product) => await grid.UpdateRow(product);
+
+    void CancelEdit(ProductDto product)
+    {
+        grid.CancelEditRow(product);
+        if (product == productToInsert) productToInsert = null;
+    }
+
+    async Task OnUpdateRow(ProductDto product)
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/products/{product.Id}", product);
+            if (!response.IsSuccessStatusCode) throw new Exception();
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto atualizado!" });
+        }
+        catch
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar." });
+            await LoadData();
+        }
+    }
+
+    async Task DeleteRow(ProductDto product)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/products/{product.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                products!.Remove(product);
+                await grid.Reload();
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto excluído." });
+            }
+            else throw new Exception();
+        }
+        catch
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao excluir." });
+        }
+    }
+
+    async Task InsertRow()
+    {
+        productToInsert = new ProductDto { Id = Guid.NewGuid(), Name = "", Sku = "", IsActive = true };
+        await grid.InsertRow(productToInsert);
+    }
+
+    async Task OnCreateRow(ProductDto product)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/products", new 
+            { 
+                Name = product.Name, 
+                Sku = product.Sku, 
+                SellingPrice = product.SellingPrice, 
+                MinimumStock = product.MinimumStock,
+                IsActive = product.IsActive 
+            });
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var created = await response.Content.ReadFromJsonAsync<ProductDto>();
+                if (created != null)
+                {
+                    product.Id = created.Id;
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Produto criado!" });
+                }
+            }
+            else throw new Exception();
+        }
+        catch
+        {
+            products!.Remove(product);
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar produto." });
+        }
+        productToInsert = null;
     }
 
     public class ProductDto

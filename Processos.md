@@ -42,10 +42,17 @@
 - [x] Expor `execute_stock_transfer` nativamente, validando Tenant Security Context via args.
 - [x] Validar integração do MCP no Host (resolvido STDOUT corruption).
 
-### Phase 7: UI & Dashboards (Próximo)
+### Phase 7: UI & Dashboards
 - [x] Setup `Radzen.Blazor`.
 - [x] Rota de sumário Backend Otimizada via CQRS.
 - [x] Construir Componente de `Dashboard` (Cards e Gráfico) consolidando `StockItems`.
+
+### Phase 8: Gestão Operacional e CRUDs
+- [x] Construir `Depositos.razor` (RadzenDataGrid com Create/Update/Delete in-line).
+- [x] Atualizar `Produtos.razor` com paginação, sort e CRUD visual avançado.
+- [x] Construir `Movimentacoes.razor` (Central de Operações: Entrada, Saída, Transferência).
+- [x] Integrar tratamento de erros e notificações globais `RadzenNotification` (ex: interceptar 409 Conflict).
+- [x] Atualizar Menu de Navegação.
 
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.

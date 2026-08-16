@@ -1,0 +1,167 @@
+@page "/depositos"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
+@inject NotificationService NotificationService
+
+<PageTitle>Depósitos</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestão de Depósitos</h2>
+    <RadzenButton Icon="add" Text="Novo Depósito" Click="@InsertRow" ButtonStyle="ButtonStyle.Primary" />
+</div>
+
+@if (warehouses == null)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenDataGrid @ref="grid" Data="@warehouses" TItem="WarehouseDto" EditMode="DataGridEditMode.Single" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow">
+        <Columns>
+            <RadzenDataGridColumn TItem="WarehouseDto" Property="Name" Title="Nome">
+                <EditTemplate Context="warehouse">
+                    <RadzenTextBox @bind-Value="warehouse.Name" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WarehouseDto" Property="Location" Title="Localização">
+                <EditTemplate Context="warehouse">
+                    <RadzenTextBox @bind-Value="warehouse.Location" Style="width:100%" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="WarehouseDto" Context="warehouse" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="156px">
+                <Template Context="warehouse">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(warehouse))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(warehouse))" @onclick:stopPropagation="true">
+                    </RadzenButton>
+                </Template>
+                <EditTemplate Context="warehouse">
+                    <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(warehouse))">
+                    </RadzenButton>
+                    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(warehouse))">
+                    </RadzenButton>
+                </EditTemplate>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    private RadzenDataGrid<WarehouseDto> grid = null!;
+    private List<WarehouseDto>? warehouses;
+    private WarehouseDto? warehouseToInsert;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            warehouses = await Http.GetFromJsonAsync<List<WarehouseDto>>("api/warehouses");
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao carregar depósitos." });
+        }
+    }
+
+    async Task EditRow(WarehouseDto warehouse)
+    {
+        await grid.EditRow(warehouse);
+    }
+
+    async Task OnUpdateRow(WarehouseDto warehouse)
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/warehouses/{warehouse.Id}", warehouse);
+            if (!response.IsSuccessStatusCode) throw new Exception();
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito atualizado!" });
+        }
+        catch
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao atualizar depósito." });
+            await LoadData();
+        }
+    }
+
+    async Task SaveRow(WarehouseDto warehouse)
+    {
+        await grid.UpdateRow(warehouse);
+    }
+
+    void CancelEdit(WarehouseDto warehouse)
+    {
+        grid.CancelEditRow(warehouse);
+        if (warehouse == warehouseToInsert)
+        {
+            warehouseToInsert = null;
+        }
+    }
+
+    async Task DeleteRow(WarehouseDto warehouse)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/warehouses/{warehouse.Id}");
+            if (response.IsSuccessStatusCode)
+            {
+                warehouses!.Remove(warehouse);
+                await grid.Reload();
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito excluído." });
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+        catch
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao excluir." });
+        }
+    }
+
+    async Task InsertRow()
+    {
+        warehouseToInsert = new WarehouseDto { Id = Guid.NewGuid(), Name = "", Location = "" };
+        await grid.InsertRow(warehouseToInsert);
+    }
+
+    async Task OnCreateRow(WarehouseDto warehouse)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/warehouses", new { Name = warehouse.Name, Location = warehouse.Location });
+            if (response.IsSuccessStatusCode)
+            {
+                var created = await response.Content.ReadFromJsonAsync<WarehouseDto>();
+                if (created != null)
+                {
+                    warehouse.Id = created.Id;
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Sucesso", Detail = "Depósito criado!" });
+                }
+            }
+            else
+            {
+                throw new Exception();
+            }
+        }
+        catch
+        {
+            warehouses!.Remove(warehouse);
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Erro", Detail = "Falha ao criar depósito." });
+        }
+        warehouseToInsert = null;
+    }
+
+    public class WarehouseDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+    }
+}
