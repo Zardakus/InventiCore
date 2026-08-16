@@ -54,6 +54,11 @@
 - [x] Integrar tratamento de erros e notificações globais `RadzenNotification` (ex: interceptar 409 Conflict).
 - [x] Atualizar Menu de Navegação.
 
+### Evolução Autônoma (Passos 2 a 4)
+- [x] **Refatoração UI/UX**: Migração das edições In-line de `Depositos` e `Produtos` para formulários flutuantes `RadzenDialog`, aderindo ao padrão de mercado B2B SaaS.
+- [x] **Feature (Extrato)**: Nova funcionalidade de "Histórico de Movimentações", expondo *StockMovements* de forma cronológica via CQRS e renderizando em *RadzenDataGrid* com Badges visuais (Entrada/Saída/Transferência).
+- [x] **Self-Healing**: Identificação de gargalos de build por bloqueio de arquivo no pipeline (Stop-Process forçado via PID) resolvendo a falha MSB3026.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.
