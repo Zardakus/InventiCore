@@ -60,7 +60,6 @@ public class AddStockCommandHandler : IRequestHandler<AddStockCommand, StockMove
 
         // Transação: Atualiza quantidade e grava o log imutável de movimentação
         stockItem.Quantity += request.Quantity;
-        _unitOfWork.StockItems.Update(stockItem);
 
         var movement = new StockMovement
         {
