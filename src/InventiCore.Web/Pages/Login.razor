@@ -44,26 +44,39 @@
     private async Task HandleLogin()
     {
         errorMessage = null;
-        var response = await Http.PostAsJsonAsync("api/auth/login", new
+        try
         {
-            Username = loginModel.Username,
-            Password = loginModel.Password,
-            TenantId = Guid.Parse(loginModel.TenantId)
-        });
-
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-            if (result?.Token != null)
+            var response = await Http.PostAsJsonAsync("api/auth/login", new
             {
-                await LocalStorage.SetItemAsync("authToken", result.Token);
-                ((CustomAuthStateProvider)AuthStateProvider).NotifyUserAuthentication(result.Token);
-                NavigationManager.NavigateTo("/");
+                Username = loginModel.Username,
+                Password = loginModel.Password,
+                TenantId = Guid.Parse(loginModel.TenantId)
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                if (result?.Token != null)
+                {
+                    await LocalStorage.SetItemAsync("authToken", result.Token);
+                    ((CustomAuthStateProvider)AuthStateProvider).NotifyUserAuthentication(result.Token);
+                    NavigationManager.NavigateTo("/");
+                }
+            }
+            else
+            {
+                errorMessage = "Erro ao fazer login. Verifique as credenciais.";
             }
         }
-        else
+        catch (HttpRequestException ex)
         {
-            errorMessage = "Erro ao fazer login. Verifique as credenciais.";
+            errorMessage = $"Erro de rede ao conectar à API: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erro inesperado: {ex.Message}";
+            Console.WriteLine(ex.ToString());
         }
     }
 

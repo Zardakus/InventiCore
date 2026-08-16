@@ -6,6 +6,7 @@ using InventiCore.Mcp.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 // Recupera o TenantId obrigatório
 var tenantArgIndex = Array.IndexOf(args, "--tenant-id");
