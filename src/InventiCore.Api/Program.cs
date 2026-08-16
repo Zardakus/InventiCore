@@ -1,5 +1,6 @@
-using InventiCore.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
+using InventiCore.Api.Middleware;
+using InventiCore.Application;
+using InventiCore.Infrastructure;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,9 +13,9 @@ builder.Host.UseSerilog((context, loggerConfig) =>
         .WriteTo.Console();
 });
 
-// ── Entity Framework Core (PostgreSQL) ───────────────────
-builder.Services.AddDbContext<InventiCoreDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// ── Dependency Injection (Clean Architecture layers) ─────
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // ── Controllers ──────────────────────────────────────────
 builder.Services.AddControllers();
@@ -32,6 +33,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// ── Global Exception Handler (deve ser o primeiro middleware) ──
+app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 // ── Pipeline HTTP ────────────────────────────────────────
 if (app.Environment.IsDevelopment())
