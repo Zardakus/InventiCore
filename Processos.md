@@ -42,6 +42,11 @@
 - [x] Expor `execute_stock_transfer` nativamente, validando Tenant Security Context via args.
 - [x] Validar integração do MCP no Host (resolvido STDOUT corruption).
 
+### Phase 7: UI & Dashboards (Próximo)
+- [x] Setup `Radzen.Blazor`.
+- [x] Rota de sumário Backend Otimizada via CQRS.
+- [x] Construir Componente de `Dashboard` (Cards e Gráfico) consolidando `StockItems`.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

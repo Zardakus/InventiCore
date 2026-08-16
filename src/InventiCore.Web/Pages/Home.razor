@@ -1,7 +1,80 @@
-﻿@page "/"
+@page "/"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject HttpClient Http
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard - InventiCore</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="row mb-4">
+    <div class="col-12">
+        <RadzenText TextStyle="TextStyle.H3">Visão Geral do Estoque</RadzenText>
+    </div>
+</div>
 
-Welcome to your new app.
+@if (summary == null)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <div class="row mb-4">
+        <div class="col-md-6 col-lg-3">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Total de Produtos</RadzenText>
+                <RadzenText TextStyle="TextStyle.H2" class="mt-2 mb-0" style="color: var(--rz-primary);">@summary.TotalProducts</RadzenText>
+            </RadzenCard>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Produtos com Estoque Baixo</RadzenText>
+                <RadzenText TextStyle="TextStyle.H2" class="mt-2 mb-0" style="color: var(--rz-danger);">@summary.LowStockItems</RadzenText>
+            </RadzenCard>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H5" class="mb-4">Volume de Estoque por Depósito</RadzenText>
+                <RadzenChart>
+                    <RadzenColumnSeries Data="@summary.StockPerWarehouse" CategoryProperty="WarehouseName" ValueProperty="TotalQuantity" Title="Quantidade Total" />
+                    <RadzenColumnOptions Radius="5" />
+                    <RadzenValueAxis>
+                        <RadzenGridLines Visible="true" />
+                        <RadzenAxisTitle Text="Itens em Estoque" />
+                    </RadzenValueAxis>
+                </RadzenChart>
+            </RadzenCard>
+        </div>
+    </div>
+}
+
+@code {
+    private DashboardSummaryDto? summary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            summary = await Http.GetFromJsonAsync<DashboardSummaryDto>("api/dashboard/summary");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao carregar dashboard: {ex.Message}");
+            // Handle error, maybe show notification
+        }
+    }
+
+    public class DashboardSummaryDto
+    {
+        public int TotalProducts { get; set; }
+        public int LowStockItems { get; set; }
+        public List<WarehouseStockSummaryDto> StockPerWarehouse { get; set; } = new();
+    }
+
+    public class WarehouseStockSummaryDto
+    {
+        public string WarehouseName { get; set; } = string.Empty;
+        public int TotalQuantity { get; set; }
+    }
+}

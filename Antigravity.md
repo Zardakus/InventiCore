@@ -116,6 +116,11 @@ Domain não referencia nenhum outro projeto.
   - `analyze_low_stock`: Utiliza o `AnalyzeLowStockQuery` para avaliar falta de estoque e sugerir *Warehouses* de transferência.
   - `execute_stock_transfer`: Reaproveita o `TransferStockCommand` para automatizar o balanceamento em tempo real.
 
+### 10. Dashboard e Painel Visual (Radzen)
+- **Biblioteca Base:** `Radzen.Blazor` foi incorporado para agilizar o uso de DataGrids, Cards e Gráficos analíticos.
+- **Integração:** A rota principal (`/`) foi reescrita no componente `Dashboard.razor`, exibindo os indicadores-chave de performance (KPIs) via `RadzenCard`.
+- **Análises:** Um endpoint otimizado (`/api/dashboard/summary`) operando sobre CQRS/MediatR processa a agregação dos dados de estoque, isolados por Tenant, exibindo um `RadzenColumnSeries` (Gráfico de Barras) consolidando a alocação de produtos por depósitos.
+
 ## Roadmap & Checklists
 1. **[x] Passo 1:** Estabelecer a Memória da IA.
 2. **[x] Passo 2:** CRUDs Iniciais (Tenants, Warehouses, Products).
@@ -124,6 +129,7 @@ Domain não referencia nenhum outro projeto.
 5. **[x] Passo 5:** CI/CD e Integração com Repositório Remoto.
 6. **[x] Passo 6:** Fundação do Frontend em Blazor WASM.
 7. **[x] Passo 7:** Arquitetura de Agentes (Model Context Protocol).
+8. **[x] Passo 8:** Dashboards e Relatórios Gerenciais (Radzen).
 
 ---
 
