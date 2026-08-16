@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: inventicore-postgres
+    environment:
+      POSTGRES_USER: inventicore
+      POSTGRES_PASSWORD: inventicore_dev_2024
+      POSTGRES_DB: inventicore_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Redis para cache distribuído (fase futura)
+  redis:
+    image: redis:7-alpine
+    container_name: inventicore-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # RabbitMQ para mensageria (fase futura)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: inventicore-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: inventicore
+      RABBITMQ_DEFAULT_PASS: inventicore_dev_2024
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

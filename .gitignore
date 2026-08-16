@@ -1,0 +1,38 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+## NuGet
+*.nupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets
+
+## IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+.idea/
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Project specific
+appsettings.Development.json
+coverage/
