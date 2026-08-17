@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,12 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 {
     loggerConfig
         .ReadFrom.Configuration(context.Configuration)
-        .WriteTo.Console();
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.Async(a => a.File(
+            new CompactJsonFormatter(), 
+            "logs/inventicore-api-.json", 
+            rollingInterval: RollingInterval.Day));
 });
 
 // ── Dependency Injection (Clean Architecture layers) ─────
@@ -112,8 +118,35 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseSerilogRequestLogging();
+app.UseSerilogRequestLogging(options =>
+{
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        var currentUser = httpContext.RequestServices.GetService<ICurrentUserService>();
+        if (currentUser != null && currentUser.TenantId != Guid.Empty)
+        {
+            diagnosticContext.Set("TenantId", currentUser.TenantId);
+        }
+    };
+});
 app.UseHttpsRedirection();
+
+// Tenant Context Middleware para enriquecer logs internos (handlers/domain)
+app.Use(async (context, next) =>
+{
+    var currentUser = context.RequestServices.GetService<ICurrentUserService>();
+    if (currentUser != null && currentUser.TenantId != Guid.Empty)
+    {
+        using (Serilog.Context.LogContext.PushProperty("TenantId", currentUser.TenantId))
+        {
+            await next(context);
+        }
+    }
+    else
+    {
+        await next(context);
+    }
+});
 
 // Use CORS before Auth
 app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());

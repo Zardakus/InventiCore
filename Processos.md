@@ -65,6 +65,12 @@
 - [x] Testes de Domínio: Adição de métodos de regra de negócio (`AddQuantity`, `RemoveQuantity`) na entidade `StockItem` e validação com `InsufficientStockException`.
 - [x] Testes de Aplicação: Cobertura do Handler `TransferStockCommandHandler` validando fluxos de sucesso e isolamento de Tenants.
 
+### Phase 10: Observabilidade e Logs Estruturados (Telemetry)
+- [x] Setup do `Serilog.AspNetCore`, `Serilog.Sinks.Console`, `Serilog.Sinks.Async`, `Serilog.Sinks.File` e `Serilog.Formatting.Compact`.
+- [x] Configuração do `Serilog` via `Program.cs` para gerar logs assíncronos no console e em arquivo estruturado (`CompactJsonFormatter`).
+- [x] Implementação de enriquecimento contextual `EnrichDiagnosticContext` injetando o `TenantId` do `ICurrentUserService` no evento de log.
+- [x] Configuração da infraestrutura de logs do `InventiCore.Mcp` direcionada a arquivo para evitar poluição do `STDOUT` no protocolo MCP.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

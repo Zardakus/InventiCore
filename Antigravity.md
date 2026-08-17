@@ -77,6 +77,11 @@ Domain não referencia nenhum outro projeto.
 - Tabela append-only — NUNCA sofre UPDATE ou DELETE.
 - Todo movimento de estoque (Entry, Exit, Transfer, Adjustment) gera um registro imutável.
 
+### 2.10 Observabilidade e Telemetria (Serilog)
+- **Motor Base:** Serilog configurado em Async File Sink e Console (na API).
+- **Formatador:** Compact Json Formatter para logs estruturados em arquivo prontos para Stack ELK/Datadog.
+- **Enriquecimento Multi-Tenant:** `EnrichDiagnosticContext` injeta `TenantId` em todas as requisições web logadas, isolando rastreio por cliente B2B.
+
 ---
 
 ## 3. Regras de Negócio Estritas

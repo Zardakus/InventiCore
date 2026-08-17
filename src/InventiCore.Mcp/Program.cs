@@ -30,23 +30,45 @@ var configuration = new ConfigurationBuilder()
     .AddEnvironmentVariables()
     .Build();
 
-var builder = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
-    {
-        services.AddLogging(logging => 
+// ── Serilog no MCP ──────────────────────────────────────────────────────────
+// CUIDADO: Não escreva no Console! O MCP opera via STDIO.
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("TenantId", tenantId)
+    .WriteTo.Async(a => a.File(
+        new CompactJsonFormatter(), 
+        "logs/inventicore-mcp-.json", 
+        rollingInterval: RollingInterval.Day))
+    .CreateLogger();
+
+try
+{
+    var builder = Host.CreateDefaultBuilder(args)
+        .UseSerilog()
+        .ConfigureServices((context, services) =>
         {
-            logging.ClearProviders();
-            logging.AddDebug();
+            // Removemos a adição de Debug/Console nativos para garantir silêncio no STDOUT
+            services.AddLogging(logging => logging.ClearProviders());
+
+            services.AddApplication();
+            services.AddInfrastructure(configuration);
+
+            // Injetar o contexto seguro MCP com o TenantId
+            services.AddSingleton<ICurrentUserService>(new McpCurrentUserService { TenantId = tenantId });
+
+            services.AddHostedService<McpStdioServer>();
         });
 
-        services.AddApplication();
-        services.AddInfrastructure(configuration);
 
-        // Injetar o contexto seguro MCP com o TenantId
-        services.AddSingleton<ICurrentUserService>(new McpCurrentUserService { TenantId = tenantId });
-
-        services.AddHostedService<McpStdioServer>();
-    });
-
-var host = builder.Build();
-await host.RunAsync();
+    var host = builder.Build();
+    await host.RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Falha catastrofica no servidor MCP");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
