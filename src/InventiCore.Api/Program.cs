@@ -61,6 +61,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// â”€â”€ Cache DistribuÃ­do (Redis) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
+    options.InstanceName = "InventiCore_";
+});
+
 // â”€â”€ HttpClient para o Consumer do Discord com Polly (ResiliÃªncia) â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddHttpClient<InventiCore.Api.Workers.StockLowEventConsumer>()
     .AddPolicyHandler(HttpPolicyExtensions

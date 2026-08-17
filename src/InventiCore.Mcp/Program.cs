@@ -57,7 +57,10 @@ try
             services.AddApplication();
             services.AddInfrastructure(configuration);
 
-            // ── Mensageria (MassTransit + RabbitMQ) ───────────────────────────
+            // â”€â”€ Cache DistribuÃ­do Fake/Em MemÃ³ria (para injetar IDistributedCache no MCP) â”€â”€
+            services.AddDistributedMemoryCache();
+
+            // â”€â”€ Mensageria (MassTransit + RabbitMQ) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             // Apenas produtor para os comandos do MCP
             services.AddMassTransit(x =>
             {

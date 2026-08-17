@@ -82,6 +82,12 @@
 - [x] ConfiguraÃ§Ã£o de polÃ­ticas de **Retry** (3 tentativas com *exponential backoff*) no `HttpClient` do `StockLowEventConsumer` para contornar falhas transientes e instabilidades no Discord (5xx e timeouts).
 - [x] ImplementaÃ§Ã£o do patrÃ£o **Circuit Breaker** (abre circuito por 30s apÃ³s 3 falhas consecutivas) para evitar *resource exhaustion* do servidor em chamadas fadadas ao fracasso.
 
+### Phase 13: Performance e Cache DistribuÃ­do (Redis)
+- [x] InstalaÃ§Ã£o do ecossistema `Microsoft.Extensions.Caching.StackExchangeRedis` na API.
+- [x] RefatoraÃ§Ã£o do Handler `GetDashboardSummaryQueryHandler` (o mais pesado do sistema) injetando a interface nativa `IDistributedCache`.
+- [x] CriaÃ§Ã£o de chave particionada por cliente (`DashboardSummary_{TenantId}`) e configuraÃ§Ã£o de *Absolute Expiration* para 5 minutos.
+- [x] Com isso, o Banco de Dados (PostgreSQL) fica protegido contra rajadas de *refreshes* na Dashboard.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.
