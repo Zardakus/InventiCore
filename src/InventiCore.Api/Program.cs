@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Polly;
+using Polly.Extensions.Http;
+using MassTransit;
 using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,8 +61,15 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// â”€â”€ HttpClient para o Consumer do Discord â”€â”€â”€â”€â”€â”€â”€
-builder.Services.AddHttpClient<InventiCore.Api.Workers.StockLowEventConsumer>();
+// â”€â”€ HttpClient para o Consumer do Discord com Polly (ResiliÃªncia) â”€â”€â”€â”€â”€â”€â”€
+builder.Services.AddHttpClient<InventiCore.Api.Workers.StockLowEventConsumer>()
+    .AddPolicyHandler(HttpPolicyExtensions
+        .HandleTransientHttpError() // Intercepta 5xx, 408 e falhas de rede
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))) // Exponential backoff: 2s, 4s, 8s
+    .AddPolicyHandler(HttpPolicyExtensions
+        .HandleTransientHttpError()
+        .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30))); // Abre circuito por 30s apÃ³s 3 falhas consecutivas
+
 
 // â”€â”€ Mensageria (MassTransit + RabbitMQ) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 builder.Services.AddMassTransit(x =>

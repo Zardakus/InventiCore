@@ -71,11 +71,16 @@
 - [x] Implementação de enriquecimento contextual `EnrichDiagnosticContext` injetando o `TenantId` do `ICurrentUserService` no evento de log.
 - [x] Configuração da infraestrutura de logs do `InventiCore.Mcp` direcionada a arquivo para evitar poluição do `STDOUT` no protocolo MCP.
 
-### Phase 11: Mensageria Avançada e Vitrine do Portfólio
-- [x] Instalação do ecossistema `MassTransit` (`Abstractions`, `RabbitMQ`) substituindo as conexões brutas legadas e implementando `IPublishEndpoint` para eventos de domínio.
-- [x] Refatoração dos Commands (`RemoveStockCommand`, `TransferStockCommand`) para emitirem o `StockLowEvent` pelo pipeline do MassTransit.
-- [x] Criação do Worker local `StockLowEventConsumer` no backend para interceptar mensagens no RabbitMQ, validar estoque, e realizar o envio HTTP assíncrono para Webhooks do Discord (`appsettings.json`).
-- [x] Criação da vitrine corporativa no `README.md` (Design Sênior, Badges e diagramação em Mermaid detalhando a integração entre CQRS, MCP e RabbitMQ).
+### Phase 11: Mensageria AvanÃ§ada e Vitrine do PortfÃ³lio
+- [x] InstalaÃ§Ã£o do ecossistema `MassTransit` (`Abstractions`, `RabbitMQ`) substituindo as conexÃµes brutas legadas e implementando `IPublishEndpoint` para eventos de domÃ­nio.
+- [x] RefatoraÃ§Ã£o dos Commands (`RemoveStockCommand`, `TransferStockCommand`) para emitirem o `StockLowEvent` pelo pipeline do MassTransit.
+- [x] CriaÃ§Ã£o do Worker local `StockLowEventConsumer` no backend para interceptar mensagens no RabbitMQ, validar estoque, e realizar o envio HTTP assÃ­ncrono para Webhooks do Discord (`appsettings.json`).
+- [x] CriaÃ§Ã£o da vitrine corporativa no `README.md` (Design SÃªnior, Badges e diagramaÃ§Ã£o em Mermaid detalhando a integraÃ§Ã£o entre CQRS, MCP e RabbitMQ).
+
+### Phase 12: ResiliÃªncia e ProteÃ§Ã£o de Rede (Polly)
+- [x] InstalaÃ§Ã£o do pacote `Microsoft.Extensions.Http.Polly` no projeto da API (`InventiCore.Api`).
+- [x] ConfiguraÃ§Ã£o de polÃ­ticas de **Retry** (3 tentativas com *exponential backoff*) no `HttpClient` do `StockLowEventConsumer` para contornar falhas transientes e instabilidades no Discord (5xx e timeouts).
+- [x] ImplementaÃ§Ã£o do patrÃ£o **Circuit Breaker** (abre circuito por 30s apÃ³s 3 falhas consecutivas) para evitar *resource exhaustion* do servidor em chamadas fadadas ao fracasso.
 
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
