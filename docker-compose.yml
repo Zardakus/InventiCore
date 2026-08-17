@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  postgres:
+  db:
     image: postgres:16-alpine
-    container_name: inventicore-postgres
+    container_name: inventicore_db
     environment:
       POSTGRES_USER: inventicore
       POSTGRES_PASSWORD: inventicore_dev_2024
@@ -11,28 +11,59 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - inventicore_pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # Redis para cache distribuído (fase futura)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: inventicore_rmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
-    container_name: inventicore-redis
+    container_name: inventicore_redis
     ports:
       - "6379:6379"
     restart: unless-stopped
 
-  # RabbitMQ para mensageria (fase futura)
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: inventicore-rabbitmq
+  api:
+    build:
+      context: .
+      dockerfile: src/InventiCore.Api/Dockerfile
+    container_name: inventicore_api
     environment:
-      RABBITMQ_DEFAULT_USER: inventicore
-      RABBITMQ_DEFAULT_PASS: inventicore_dev_2024
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=inventicore_db;Username=inventicore;Password=inventicore_dev_2024
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - Redis__ConnectionString=redis:6379
     ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # Management UI
+      - "5030:8080"
+    depends_on:
+      - db
+      - rabbitmq
+      - redis
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: src/InventiCore.Web/Dockerfile
+    container_name: inventicore_web
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
     restart: unless-stopped
 
 volumes:
-  postgres_data:
+  inventicore_pgdata:

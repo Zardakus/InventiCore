@@ -88,6 +88,11 @@
 - [x] CriaÃ§Ã£o de chave particionada por cliente (`DashboardSummary_{TenantId}`) e configuraÃ§Ã£o de *Absolute Expiration* para 5 minutos.
 - [x] Com isso, o Banco de Dados (PostgreSQL) fica protegido contra rajadas de *refreshes* na Dashboard.
 
+### Phase 14: Portabilidade e Deploy (Docker)
+- [x] CriaÃ§Ã£o de Dockerfiles multi-stage para `InventiCore.Api` (.NET 8), `InventiCore.Mcp` (.NET 9) e `InventiCore.Web` (Blazor compilado via Nginx Alpine).
+- [x] ConfiguraÃ§Ã£o do arquivo de rotas `nginx.conf` corrigindo o *fallback* de navegaÃ§Ã£o da SPA.
+- [x] UnificaÃ§Ã£o da orquestraÃ§Ã£o no `docker-compose.yml` raiz, unindo Postgres, RabbitMQ, Redis, API e Frontend numa Ãºnica sub-rede virtual isolada, configurando dependÃªncias e variÃ¡veis de ambiente adequadamente.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.
