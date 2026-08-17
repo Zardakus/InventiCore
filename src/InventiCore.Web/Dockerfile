@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 COPY ["src/InventiCore.Web/InventiCore.Web.csproj", "src/InventiCore.Web/"]
 RUN dotnet restore "src/InventiCore.Web/InventiCore.Web.csproj"
