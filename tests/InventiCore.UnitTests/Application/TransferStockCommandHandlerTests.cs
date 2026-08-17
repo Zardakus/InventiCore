@@ -3,6 +3,7 @@ using InventiCore.Application.Common.Interfaces;
 using InventiCore.Application.Features.Stock.Commands.TransferStock;
 using InventiCore.Domain.Entities;
 using InventiCore.Domain.Interfaces;
+using MassTransit;
 using Moq;
 using Xunit;
 
@@ -11,14 +12,14 @@ namespace InventiCore.UnitTests.Application;
 public class TransferStockCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IMessagePublisher> _publisherMock;
+    private readonly Mock<IPublishEndpoint> _publishEndpointMock;
     private readonly TransferStockCommandHandler _handler;
 
     public TransferStockCommandHandlerTests()
     {
         _unitOfWorkMock = new Mock<IUnitOfWork>() { DefaultValue = DefaultValue.Mock };
-        _publisherMock = new Mock<IMessagePublisher>();
-        _handler = new TransferStockCommandHandler(_unitOfWorkMock.Object, _publisherMock.Object);
+        _publishEndpointMock = new Mock<IPublishEndpoint>();
+        _handler = new TransferStockCommandHandler(_unitOfWorkMock.Object, _publishEndpointMock.Object);
     }
 
     [Fact]

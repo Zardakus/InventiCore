@@ -28,9 +28,6 @@ public static class DependencyInjection
         // ── Unit of Work ─────────────────────────────────────────
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // ── Messaging (RabbitMQ) ─────────────────────────────────
-        services.AddSingleton<InventiCore.Application.Common.Interfaces.IMessagePublisher, InventiCore.Infrastructure.Messaging.RabbitMqPublisher>();
-
         return services;
     }
 }

@@ -1,12 +1,12 @@
 using FluentValidation;
 using InventiCore.Application.Common.Events;
-using InventiCore.Application.Common.Interfaces;
 using InventiCore.Application.Common.Mappings;
 using InventiCore.Application.DTOs;
 using InventiCore.Domain.Entities;
 using InventiCore.Domain.Enums;
 using InventiCore.Domain.Exceptions;
 using InventiCore.Domain.Interfaces;
+using MassTransit;
 using MediatR;
 
 namespace InventiCore.Application.Features.Stock.Commands.TransferStock;
@@ -30,12 +30,12 @@ public class TransferStockCommandValidator : AbstractValidator<TransferStockComm
 public class TransferStockCommandHandler : IRequestHandler<TransferStockCommand, StockMovementDto>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMessagePublisher _publisher;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public TransferStockCommandHandler(IUnitOfWork unitOfWork, IMessagePublisher publisher)
+    public TransferStockCommandHandler(IUnitOfWork unitOfWork, IPublishEndpoint publishEndpoint)
     {
         _unitOfWork = unitOfWork;
-        _publisher = publisher;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<StockMovementDto> Handle(TransferStockCommand request, CancellationToken cancellationToken)
@@ -110,7 +110,7 @@ public class TransferStockCommandHandler : IRequestHandler<TransferStockCommand,
                 MinimumStock = product.MinimumStock,
                 TenantId = product.TenantId
             };
-            await _publisher.PublishAsync(lowEvent, "stock.low.alert", cancellationToken);
+            await _publishEndpoint.Publish(lowEvent, cancellationToken);
         }
 
         return StockMapper.ToDto(movement);

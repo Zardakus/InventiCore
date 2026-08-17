@@ -71,6 +71,12 @@
 - [x] Implementação de enriquecimento contextual `EnrichDiagnosticContext` injetando o `TenantId` do `ICurrentUserService` no evento de log.
 - [x] Configuração da infraestrutura de logs do `InventiCore.Mcp` direcionada a arquivo para evitar poluição do `STDOUT` no protocolo MCP.
 
+### Phase 11: Mensageria Avançada e Vitrine do Portfólio
+- [x] Instalação do ecossistema `MassTransit` (`Abstractions`, `RabbitMQ`) substituindo as conexões brutas legadas e implementando `IPublishEndpoint` para eventos de domínio.
+- [x] Refatoração dos Commands (`RemoveStockCommand`, `TransferStockCommand`) para emitirem o `StockLowEvent` pelo pipeline do MassTransit.
+- [x] Criação do Worker local `StockLowEventConsumer` no backend para interceptar mensagens no RabbitMQ, validar estoque, e realizar o envio HTTP assíncrono para Webhooks do Discord (`appsettings.json`).
+- [x] Criação da vitrine corporativa no `README.md` (Design Sênior, Badges e diagramação em Mermaid detalhando a integração entre CQRS, MCP e RabbitMQ).
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.

@@ -58,8 +58,25 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Register Background Worker
-builder.Services.AddHostedService<InventiCore.Api.Workers.StockLowDiscordAlertWorker>();
+// â”€â”€ HttpClient para o Consumer do Discord â”€â”€â”€â”€â”€â”€â”€
+builder.Services.AddHttpClient<InventiCore.Api.Workers.StockLowEventConsumer>();
+
+// â”€â”€ Mensageria (MassTransit + RabbitMQ) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<InventiCore.Api.Workers.StockLowEventConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        // ConexÃ£o com RabbitMQ via docker compose
+        cfg.Host("localhost", "/", h => {
+            h.Username("guest");
+            h.Password("guest");
+        });
+        
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 // ── Controllers ──────────────────────────────────────────
 builder.Services.AddControllers();

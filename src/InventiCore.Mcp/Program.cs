@@ -7,6 +7,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Formatting.Compact;
+using MassTransit;
 
 // Recupera o TenantId obrigatório
 var tenantArgIndex = Array.IndexOf(args, "--tenant-id");
@@ -53,6 +56,19 @@ try
 
             services.AddApplication();
             services.AddInfrastructure(configuration);
+
+            // ── Mensageria (MassTransit + RabbitMQ) ───────────────────────────
+            // Apenas produtor para os comandos do MCP
+            services.AddMassTransit(x =>
+            {
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host("localhost", "/", h => {
+                        h.Username("guest");
+                        h.Password("guest");
+                    });
+                });
+            });
 
             // Injetar o contexto seguro MCP com o TenantId
             services.AddSingleton<ICurrentUserService>(new McpCurrentUserService { TenantId = tenantId });

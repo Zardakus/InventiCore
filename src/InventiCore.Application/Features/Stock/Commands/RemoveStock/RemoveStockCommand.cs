@@ -1,12 +1,12 @@
 using FluentValidation;
 using InventiCore.Application.Common.Events;
-using InventiCore.Application.Common.Interfaces;
 using InventiCore.Application.Common.Mappings;
 using InventiCore.Application.DTOs;
 using InventiCore.Domain.Entities;
 using InventiCore.Domain.Enums;
 using InventiCore.Domain.Exceptions;
 using InventiCore.Domain.Interfaces;
+using MassTransit;
 using MediatR;
 
 namespace InventiCore.Application.Features.Stock.Commands.RemoveStock;
@@ -28,12 +28,12 @@ public class RemoveStockCommandValidator : AbstractValidator<RemoveStockCommand>
 public class RemoveStockCommandHandler : IRequestHandler<RemoveStockCommand, StockMovementDto>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMessagePublisher _publisher;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public RemoveStockCommandHandler(IUnitOfWork unitOfWork, IMessagePublisher publisher)
+    public RemoveStockCommandHandler(IUnitOfWork unitOfWork, IPublishEndpoint publishEndpoint)
     {
         _unitOfWork = unitOfWork;
-        _publisher = publisher;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<StockMovementDto> Handle(RemoveStockCommand request, CancellationToken cancellationToken)
@@ -86,8 +86,7 @@ public class RemoveStockCommandHandler : IRequestHandler<RemoveStockCommand, Sto
                 TenantId = product.TenantId
             };
             
-            // Fire and forget, or awaited
-            await _publisher.PublishAsync(lowEvent, "stock.low.alert", cancellationToken);
+            await _publishEndpoint.Publish(lowEvent, cancellationToken);
         }
 
         return StockMapper.ToDto(movement);
