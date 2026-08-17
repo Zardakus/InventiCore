@@ -93,6 +93,13 @@
 - [x] ConfiguraÃ§Ã£o do arquivo de rotas `nginx.conf` corrigindo o *fallback* de navegaÃ§Ã£o da SPA.
 - [x] UnificaÃ§Ã£o da orquestraÃ§Ã£o no `docker-compose.yml` raiz, unindo Postgres, RabbitMQ, Redis, API e Frontend numa Ãºnica sub-rede virtual isolada, configurando dependÃªncias e variÃ¡veis de ambiente adequadamente.
 
+### Phase 15: ExpansÃ£o de Capacidades AutÃ´nomas (Novas MCP Tools)
+- [x] Registro da ferramenta `create_product` no schema `tools/list` com propriedades completas (`name`, `sku`, `description`, `category`, `costPrice`, `sellingPrice`, `minimumStock`).
+- [x] Registro da ferramenta `delete_warehouse` no schema `tools/list` com propriedade `warehouseId`.
+- [x] ImplementaÃ§Ã£o dos handlers JSON-RPC no bloco `tools/call`, mapeando `create_product` â†' `CreateProductCommand` e `delete_warehouse` â†' `DeleteWarehouseCommand` via MediatR.
+- [x] Isolamento de `TenantId` garantido: o `CreateProductCommandHandler` injeta o TenantId via `ICurrentUserService` (previamente configurado no boot do MCP com `--tenant-id`).
+- [x] Melhoria do tratamento de erros: exceÃ§Ãµes no `catch` agora retornam `RespondError` com a mensagem ao client, em vez de silenciar.
+
 - [ ] **Criar/atualizar DTOs**: nunca expor entidades de domínio diretamente na API.
 - [ ] **Criar Validator (se Command)**: todo Command deve ter um FluentValidation Validator correspondente.
 - [ ] **Usar CancellationToken**: todos os métodos assíncronos devem propagar `CancellationToken`.
