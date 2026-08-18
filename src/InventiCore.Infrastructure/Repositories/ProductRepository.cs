@@ -19,8 +19,9 @@ public class ProductRepository : Repository<Product>, IProductRepository
     public async Task<IEnumerable<Product>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .Include(p => p.StockItems)
             .AsNoTracking()
-            .Where(p => p.TenantId == tenantId)
+            .Where(p => p.TenantId == tenantId && p.IsActive)
             .OrderBy(p => p.Name)
             .ToListAsync(cancellationToken);
     }

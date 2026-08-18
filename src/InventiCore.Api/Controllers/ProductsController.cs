@@ -17,10 +17,12 @@ namespace InventiCore.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly InventiCore.Application.Common.Interfaces.ICurrentUserService _currentUserService;
 
-    public ProductsController(IMediator mediator)
+    public ProductsController(IMediator mediator, InventiCore.Application.Common.Interfaces.ICurrentUserService currentUserService)
     {
         _mediator = mediator;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -55,6 +57,7 @@ public class ProductsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command, CancellationToken cancellationToken)
     {
+        
         var result = await _mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -73,6 +76,7 @@ public class ProductsController : ControllerBase
         if (id != command.Id)
             return BadRequest("Id da URL não corresponde ao Id do body.");
 
+        command = command with { TenantId = _currentUserService.TenantId ?? Guid.Empty };
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }

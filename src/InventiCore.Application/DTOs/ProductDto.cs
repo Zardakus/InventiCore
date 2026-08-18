@@ -14,6 +14,7 @@ public record ProductDto
     public decimal CostPrice { get; init; }
     public decimal SellingPrice { get; init; }
     public int MinimumStock { get; init; }
+    public int TotalStock { get; init; }
     public bool IsActive { get; init; }
     public Guid TenantId { get; init; }
     public DateTime CreatedAt { get; init; }

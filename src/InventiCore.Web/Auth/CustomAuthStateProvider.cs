@@ -34,6 +34,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public void NotifyUserAuthentication(string token)
     {
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", token);
         var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(JwtParser.ParseClaimsFromJwt(token), "jwt"));
         var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
         NotifyAuthenticationStateChanged(authState);
@@ -41,6 +42,7 @@ public class CustomAuthStateProvider : AuthenticationStateProvider
 
     public void NotifyUserLogout()
     {
+        _httpClient.DefaultRequestHeaders.Authorization = null;
         var authState = Task.FromResult(new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity())));
         NotifyAuthenticationStateChanged(authState);
     }

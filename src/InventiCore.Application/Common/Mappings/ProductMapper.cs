@@ -21,6 +21,7 @@ public static class ProductMapper
             CostPrice = entity.CostPrice,
             SellingPrice = entity.SellingPrice,
             MinimumStock = entity.MinimumStock,
+            TotalStock = entity.StockItems?.Sum(x => x.Quantity) ?? 0,
             IsActive = entity.IsActive,
             TenantId = entity.TenantId,
             CreatedAt = entity.CreatedAt,

@@ -13,7 +13,7 @@ public class WarehouseRepository : Repository<Warehouse>, IWarehouseRepository
     {
         return await _dbSet
             .AsNoTracking()
-            .Where(w => w.TenantId == tenantId)
+            .Where(w => w.TenantId == tenantId && w.IsActive)
             .OrderBy(w => w.Name)
             .ToListAsync(cancellationToken);
     }

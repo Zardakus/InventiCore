@@ -16,10 +16,12 @@ namespace InventiCore.Api.Controllers;
 public class WarehousesController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly InventiCore.Application.Common.Interfaces.ICurrentUserService _currentUserService;
 
-    public WarehousesController(IMediator mediator)
+    public WarehousesController(IMediator mediator, InventiCore.Application.Common.Interfaces.ICurrentUserService currentUserService)
     {
         _mediator = mediator;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
@@ -45,6 +47,7 @@ public class WarehousesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Create([FromBody] CreateWarehouseCommand command, CancellationToken cancellationToken)
     {
+        command = command with { TenantId = _currentUserService.TenantId ?? Guid.Empty };
         var result = await _mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -58,6 +61,7 @@ public class WarehousesController : ControllerBase
         if (id != command.Id)
             return BadRequest("Id da URL não corresponde ao Id do body.");
 
+        command = command with { TenantId = _currentUserService.TenantId ?? Guid.Empty };
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }

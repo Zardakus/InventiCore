@@ -7,6 +7,7 @@ using InventiCore.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Polly;
 using Polly.Extensions.Http;
@@ -78,20 +79,26 @@ builder.Services.AddHttpClient<InventiCore.Api.Workers.StockLowEventConsumer>()
         .CircuitBreakerAsync(3, TimeSpan.FromSeconds(30))); // Abre circuito por 30s apÃ³s 3 falhas consecutivas
 
 
-// â”€â”€ Mensageria (MassTransit + RabbitMQ) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Mensageria (MassTransit + RabbitMQ)
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<InventiCore.Api.Workers.StockLowEventConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
-        // ConexÃ£o com RabbitMQ via docker compose
-        cfg.Host("localhost", "/", h => {
-            h.Username("guest");
-            h.Password("guest");
+        var rmqHost = builder.Configuration["RabbitMQ:HostName"] ?? "localhost";
+        var rmqUser = builder.Configuration["RabbitMQ:UserName"] ?? "guest";
+        var rmqPass = builder.Configuration["RabbitMQ:Password"] ?? "guest";
+
+        cfg.Host(rmqHost, "/", h => {
+            h.Username(rmqUser);
+            h.Password(rmqPass);
         });
-        
-        cfg.ConfigureEndpoints(context);
+
+        cfg.ReceiveEndpoint("stock-low-events", e =>
+        {
+            e.ConfigureConsumer<InventiCore.Api.Workers.StockLowEventConsumer>(context);
+        });
     });
 });
 
@@ -188,5 +195,25 @@ app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader(
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<InventiCore.Infrastructure.Data.InventiCoreDbContext>();
+    dbContext.Database.Migrate();
+
+    // Seeding de teste para o Tenant fixo do Frontend (simulação SaaS)
+    var defaultTenantId = Guid.Parse("7eca4967-f455-464c-bb32-925522806364");
+    if (!dbContext.Tenants.Any(t => t.Id == defaultTenantId))
+    {
+        dbContext.Tenants.Add(new InventiCore.Domain.Entities.Tenant
+        {
+            Id = defaultTenantId,
+            Name = "Empresa Demonstração",
+            Document = "00.000.000/0001-00",
+            IsActive = true
+        });
+        dbContext.SaveChanges();
+    }
+}
 
 app.Run();

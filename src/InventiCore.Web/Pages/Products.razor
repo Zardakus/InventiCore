@@ -24,6 +24,7 @@ else
             <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="Sku" Title="SKU" />
             <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="SellingPrice" Title="Preço" FormatString="{0:C}" />
             <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="MinimumStock" Title="Estoque Mínimo" />
+            <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="TotalStock" Title="Estoque Atual" />
             <RadzenDataGridColumn TItem="ProductFormDialog.ProductDto" Property="IsActive" Title="Status">
                 <Template Context="product">
                     @(product.IsActive ? "Ativo" : "Inativo")

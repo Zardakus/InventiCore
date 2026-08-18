@@ -28,6 +28,7 @@ public class GetStockMovementsQueryHandler : IRequestHandler<GetStockMovementsQu
             CreatedAt = sm.CreatedAt,
             MovementType = sm.Type.ToString(),
             Quantity = sm.Quantity,
+            TotalValue = sm.Quantity * sm.StockItem.Product.SellingPrice,
             ProductName = sm.StockItem.Product.Name,
             WarehouseName = sm.StockItem.Warehouse.Name,
             Reason = sm.Reason,
